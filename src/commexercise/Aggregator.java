@@ -1,6 +1,8 @@
 package commexercise;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,23 +19,45 @@ public class Aggregator {
 	
     private long initTime = 0;
 
+	private RpcServer grid_server = null;
+	public static final int AGG_GRID_PORT = 8080;
 	private static final String FUN_TIME_SYNC = Grid.FUN_TIME_SYNC; //keep it short
 	private static final String FUN_REQUEST =  Grid.FUN_REQUEST; //keep it short
 	private static final String FUN_ACTIVATION = Grid.FUN_ACTIVATION; //keep it short
 	
-    public static final String FLEXIBILITY_ALL = FlexibilityService.FLEXIBILITY_ALL;
-	
-	public static final int AGG_GRID_PORT = 8080;
+
+	private RpcServer house_server = null;
 	public static final int AGG_HOUSE_PORT = 8082;
+
+    private PubSubServer pubSubServer;
     public static final int AGG_PORT_PUB = 9090;
+	public static final String TOPIC = "Flexibility";
+    public static final String FLEXIBILITY_ALL_AT_T0 = "FlexAll";
+
+	private class Record {
+    	public String homeName = null;
+    	public double t0 = 0;
+    	public double flexibility_time = 0;    
+    	Record(String homeName,double t0,double flexibility_time) {
+    		this.homeName = homeName;
+    		this.t0 = t0;
+    		this.flexibility_time = flexibility_time;
+    	}
+	}
+    private class Records {
+        public List<Record> list = null;
+        public boolean valid = true;
+    	Records() {
+    		list = new ArrayList();
+    	}
+    }
+    private Records records = null;
+    
     
     private static final Logger log = LoggerFactory.getLogger(Aggregator.class);
 
-	private RpcServer grid_server = null;
-	private RpcServer house_server = null;
-    private PubSubServer pubSubServer;
-
   private Aggregator() {   
+	  	records = new Records();
 	    // create an rpc server listening on port
 	    try {
 			grid_server = new RpcServerImpl(AGG_GRID_PORT).start();
@@ -89,9 +113,13 @@ public class Aggregator {
   	        } else if (function.equals(FUN_REQUEST)) {
   	        	if(args.length==5) {
 //  		        	startTime,endTime,maxDelay,minDuration,regType
-  	        		
+  	        			
 //  	        		Thinking if we can?
 //  	        		whole logic goes here
+  	        		pubSubServer.send(TOPIC, new String[]{FLEXIBILITY_ALL_AT_T0});
+  	        		Thread.sleep(1000);
+  	        		
+  	        		//TODO !!!!!
   	        		
   	        		System.out.println("initTime set to "+initTime);
   	        		return new String[]{
@@ -123,8 +151,6 @@ public class Aggregator {
   	      }
   	    });
         
-        
-        
         house_server.setCallListener(new CallListener() {
   	      @Override
   	      public String[] receivedSyncCall(String function, String[] args) throws Exception {
@@ -134,7 +160,12 @@ public class Aggregator {
   	        	case FUN_TIME_SYNC:
   	        	break;
   	        };
-  	        return new String[]{"FUCK YOU!"};
+  	        if (records.valid) {
+  	        	records.valid = false;
+  	        	//Record current = new Record(args[0],Double.valueOf(args[1]),args[2]);
+  	        	//records.list.add(current);
+  	        }
+  	        return new String[]{"ACC"};
   	      }
   	      @Override
   	      public String[] receivedAsyncCall(String function, String[] args, long callID) throws Exception {
