@@ -5,114 +5,145 @@ import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import commexercise.broadcast.BroadcastNode;
-import commexercise.broadcast.BroadcastNodeImpl;
-import commexercise.broadcast.MessageListener;
 import commexercise.pubsub.PubSubServer;
 import commexercise.pubsub.PubSubServerImpl;
 import commexercise.pubsub.PubSubSubscriberListener;
-import commexercise.pubsub.demo.ClockService;
-import commexercise.rpc.RpcClient;
-import commexercise.rpc.RpcClientImpl;
+import commexercise.pubsub.demo.FlexibilityService;
+import commexercise.rpc.CallListener;
+import commexercise.rpc.RpcServer;
+import commexercise.rpc.RpcServerImpl;
 
-public class Aggregator implements MessageListener {
-
-	private static final String AGG_NAME = "AGG1";
-	private static final String NODE_GRID = "Grid";
-	private static final String NODE_AGG = "Aggregator";
-	private static final int PORT = 8081;
-	private static final int PORT_AGG = 9090;
-	private static final String FUN_NAME = "D"; //keep it short
+public class Aggregator {
 	
+    private long initTime = 0;
+
+	private static final String FUN_TIME_SYNC = Grid.FUN_TIME_SYNC; //keep it short
+	private static final String FUN_REQUEST =  Grid.FUN_REQUEST; //keep it short
+	private static final String FUN_ACTIVATION = Grid.FUN_ACTIVATION; //keep it short
+	
+    public static final String FLEXIBILITY_ALL = FlexibilityService.FLEXIBILITY_ALL;
+	
+	public static final int AGG_GRID_PORT = 8080;
+	public static final int AGG_HOUSE_PORT = 8082;
+    public static final int AGG_PORT_PUB = 9090;
+    
     private static final Logger log = LoggerFactory.getLogger(Aggregator.class);
 
-  private Aggregator() throws Exception {
-	  //set lisening for broadcasting
-    BroadcastNode bcn_listen=new BroadcastNodeImpl(NODE_GRID,0);
-    bcn_listen.addMessageListener(this);
+	private RpcServer grid_server = null;
+	private RpcServer house_server = null;
+    private PubSubServer pubSubServer;
 
-    //Hi! I am aggregator
-    BroadcastNode bcn_publish=new BroadcastNodeImpl(NODE_AGG,PORT_AGG);
-    bcn_publish.sendMessage("AGG:"+AGG_NAME+";"); //reduce length to fit into package
-    
-    // create a publisher server listening on port 9090
-    log.info("Starting PubSub Server");
-    PubSubServer pubSubServer = new PubSubServerImpl(PORT_AGG).start();
+  private Aggregator() {   
+	    // create an rpc server listening on port
+	    try {
+			grid_server = new RpcServerImpl(AGG_GRID_PORT).start();
+			house_server = new RpcServerImpl(AGG_HOUSE_PORT).start();
+		} catch (Exception e) {
+			System.out.println("Server start exception!");			
+			e.printStackTrace();
+		} 
 
-    // add subscriber listener (gets called when a client subscribes or unsubscribes)
-    pubSubServer.addSubscriberListener(new PubSubSubscriberListener() {
-        public void subscriberJoined(String topic, String id) {
-          System.out.println("House '"+id+"' joined the aggregated control system'");
-        }
+        // create a pubsub server listening on port 
+        log.info("Starting PubSub Server");
+        try {
+			pubSubServer = new PubSubServerImpl(AGG_PORT_PUB).start();
+		} catch (Exception e) {
+			System.out.println("Publisher start exception");
+			e.printStackTrace();
+		}
 
-        public void subscriberLeft(String topic, String id) {
-          System.out.println("House '"+id+"' left the aggregated control system");
-        }
-    });
+        // add subscriber listener (gets called when a client subscribes or unsubscribes)
+        pubSubServer.addSubscriberListener(new PubSubSubscriberListener() {
+            public void subscriberJoined(String topic, String id) {
+              System.out.println("Subscriber '"+id+"' joined for topic '"+topic);
+            }
 
-    // start the demo service that publishes current time to subscribers
-        ClockService clock = new ClockService(pubSubServer).start();
+            public void subscriberLeft(String topic, String id) {
+              System.out.println("Subscriber '"+id+"' left for topic '"+topic);
+            }
+        });
+
+        // start the demo service that publishes current time to subscribers
+        //ClockService clock = new ClockService(pubSubServer).start();
+        new FlexibilityService(pubSubServer).start();
+       
+	    // add a call listener that will get called when a girp does an RPC call to the agg
+        grid_server.setCallListener(new CallListener() {
+  	      @Override
+  	      public String[] receivedSyncCall(String function, String[] args) throws Exception {
+  	        System.out.println("Received call for function '"+function+"' with arguments"+
+  	                            Arrays.toString(args)+". Replying now.");
+  	        if (function.equals(FUN_TIME_SYNC)) {
+  	        	if(args.length==1) {
+  	        		initTime = Long.valueOf(args[0]);
+  	        		System.out.println("initTime set to "+initTime);
+  	        		return new String[]{
+  	    		        	"ACC"
+  			        };
+  	        	} else {
+  	        		System.out.println("Wrong number of arguments!");
+  	        		return new String[]{
+  	        				"EXC"
+  	        		};
+  	        	}
+  	        } else if (function.equals(FUN_REQUEST)) {
+  	        	if(args.length==5) {
+//  		        	startTime,endTime,maxDelay,minDuration,regType
+  	        		
+//  	        		Thinking if we can?
+//  	        		whole logic goes here
+  	        		
+  	        		System.out.println("initTime set to "+initTime);
+  	        		return new String[]{
+  	        				String.valueOf(args[4]=="UP"?-100:100)
+  			        };
+  	        	} else {
+  	        		System.out.println("Wrong number of arguments!");
+  	        		return new String[]{
+  	        				"EXC"
+  	        		};
+  	        	}
+  	        } else if (function.equals(FUN_ACTIVATION)) {
+  	        	
+  	        	
+  	        	
+  	        	
+  	        	return new String[]{
+  	        		"You called:",function," with arguments ",Arrays.toString(args)
+  	        	};
+  	        } else {
+  	        	return new String[]{
+  	        		"Function '",function,"' does not exist."
+  	        	};
+  	        }
+  	      }
+  	      @Override
+  	      public String[] receivedAsyncCall(String function, String[] args, long callID) throws Exception {
+  	        return null; // not implemented for this test
+  	      }
+  	    });
+        
+        
+        
+        house_server.setCallListener(new CallListener() {
+  	      @Override
+  	      public String[] receivedSyncCall(String function, String[] args) throws Exception {
+  	        System.out.println("Received call for function '"+function+"' with arguments"+
+  	                            Arrays.toString(args)+". Replying now.");
+  	        switch(function) {
+  	        	case FUN_TIME_SYNC:
+  	        	break;
+  	        };
+  	        return new String[]{"FUCK YOU!"};
+  	      }
+  	      @Override
+  	      public String[] receivedAsyncCall(String function, String[] args, long callID) throws Exception {
+  	        return null; // not implemented for this test
+  	      }
+  	    });
   }
-
-  private static int increase=0;
-  private static String IP = "";
-  private static int port=0;  
   
-  public static void startSyncCommunication() throws Exception {
-     
-      RpcClient client = new RpcClientImpl(IP,port);
-      // do synchronous call to server
-      String args[] = {"Yes I can!"}; // to be changed
-      String[] reply = client.callSync(FUN_NAME,args);
-      System.out.println("Synchronous reply: "+Arrays.toString(reply));
-      if (reply[0]=="ACC") {
-    	  System.out.println("Send message to homes.");
-	      
-    	  //TODO
-	      //to start next time
-      
-
-      }
-      
-    }
-  
-  @Override
-  public void messageReceived(String message, String origin) {
-    System.out.println("*** Received message from '"+origin+"':");
-    System.out.println("    \""+message+"\"");
-    String arr[] = message.split(";");
-    if (arr.length == 3) {
-    	for(String param:arr) {
-    		String tmp[] = param.split(":");
-    		switch(tmp[0]){
-			case "V": increase=Integer.valueOf(tmp[1]); break;
-			case "I": IP=tmp[1]; break;
-			case "P": port=Integer.valueOf(tmp[1]); break;
-			default: increase=0;
-    		}
-    	}
-    	if (increase!=0 && IP!="" && port!=0) {
-	        System.out.println("Decoded as:\n increase "+increase+"\n IP "+IP+"\n port "+port);
-	        
-	//        Can I do?
-	        System.out.println("Calc if I can do.");
-	        //TODO
-	        
-	        
-	        
-	        System.out.println("Start sync communication.");
-				try {
-					startSyncCommunication();
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-    	} else {}; //message for somebody else
-    } else System.out.println("Incomplete message!");
-//    String IP[] =
-  }
-  
-  public static void main(String args[]) throws Exception {
+  public static void main(String args[]) {
 	  new Aggregator();
   }
   

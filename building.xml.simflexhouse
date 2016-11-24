@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<building name="Building 999" description="Simulated Flexhouse 1"
+          latitude="55.68553" longitude="12.10069" altitude="40">
+          <!-- ALTITUDE NOT VERIFIED -->
+          
+  <!-- DEFAULT CONTROLLERS -->
+  <controller name="DefaultSwitchingThermostaticController" devicetype="PowerHeater"/>
+  <controller name="DefaultLightController" devicetype="DimmableLight"/>
+  <controller name="DefaultSwitchController" devicetype="Switch"/>
+  <controller name="DefaultWaterboilerController" devicetype="Waterboiler"/>
+  
+  <!-- HARDWARE INTERFACES -->
+
+  <hwinterface name="SimTPDW" type="SimThermalPowerDoorsWindows" config="SimTPDWInterfaceConfig"
+               datasource="file" tsfile="all.csv" loop="false"/>
+  
+  <sensor name="s_Grid_Psum" type="Electrical" pos="0,0" active="1">
+    <interface name="SimTPDW" channel="Psum"/>
+  </sensor>
+  <sensor name="s_Grid_Pimp" type="Electrical" pos="0,0" active="1">
+    <interface name="SimTPDW" channel="kW-imp"/>
+  </sensor>
+  
+  <!-- ROOMS -->
+  
+  <room name="Main hall" floor="0" ceiling="2.5"
+        polygon="9,0 9,13 14,13 14,0"
+        outerwallarea="21.35" innerwallarea="82.7" windowarea="9.275">
+    <window name="win1" to="Outside" area="0.35" orientation="S"/>
+    <window name="win2" to="Outside" area="0.35" orientation="SE"/>
+    <window name="win3" to="Outside" area="0.35" orientation="SW"/>
+    <door name="door1" to="Outside" area="1.6"/>
+    <door name="door2" to="Outside" area="1.6"/>
+    <sensor name="s_tempmain" type="Temp" pos="270,215" active="1">
+      <interface name="SimTPDW" channel="R8"/>
+    </sensor>
+    <sensor name="s_door1" type="Door" ref="door1" pos="270,360" active="1"> <!-- Outside door -->
+      <interface name="SimTPDW" channel="door1"/>
+    </sensor>
+    <sensor name="s_door2" type="Door" ref="door2" pos="270,95" active="1"> <!-- Outside door -->
+      <interface name="SimTPDW" channel="door2"/>
+    </sensor>
+    <sensor name="s_win1" type="Window" ref="win1" pos="290,60" active="1">
+      <interface name="SimTPDW" channel="win1"/>
+    </sensor>
+    <sensor name="s_win2" type="Window" ref="win2" pos="355,60" active="1">
+      <interface name="SimTPDW" channel="win2"/>
+    </sensor>
+    <sensor name="s_win3" type="Window" ref="win3" pos="320,60" active="1">
+      <interface name="SimTPDW" channel="win3"/>
+    </sensor>
+    <actuator name="a_htrmain_1" type="PowerHeater" pos="370,150" active="1" state="1">
+      <interface name="SimTPDW"/>
+      <electrical p="1.0" phase="x"/>
+    </actuator>
+    <actuator name="a_htrmain_2" type="PowerHeater" pos="270,150" active="1" state="1">
+      <interface name="SimTPDW"/>
+      <electrical p="1.0" phase="x"/>
+    </actuator>
+    <actuator name="a_win1" type="Window" ref="win1" pos="290,60" active="1" state="0">
+      <interface name="SimTPDW"/>
+    </actuator>
+    <actuator name="a_win2" type="Window" ref="win2" pos="355,60" active="1" state="0">
+      <interface name="SimTPDW"/>
+    </actuator>
+    <actuator name="a_win3" type="Window" ref="win3" pos="320,60" active="1" state="0">
+      <interface name="SimTPDW"/>
+    </actuator>
+  </room>
+  
+  <room name="room1" floor="0" ceiling="2.5"
+        polygon="0,6 0,11 4,11 4,6"
+        outerwallarea="16.45" innerwallarea="16.45" windowarea="2.3275">
+    <window name="winx1a" to="Outside" area="0.30" orientation="S"/>
+    <window name="winx1b" to="Outside" area="0.30" orientation="E"/>
+    <door name="doorx1" to="Main hall" area="1.6"/>
+    <sensor name="s_tempr1" type="Temp" pos="120,220" active="1">
+      <interface name="SimTPDW" channel="R1"/>
+    </sensor>
+    <sensor name="s_doorx1" type="Door" ref="doorx1" pos="20,95" active="1">
+      <interface name="SimTPDW" channel="doorx1"/>
+    </sensor>
+    <sensor name="s_winx1a" type="Window" ref="winx1a" pos="110,110" active="1">
+      <interface name="SimTPDW" channel="winx1a"/>
+    </sensor>
+    <sensor name="s_winx1b" type="Window" ref="winx1b" pos="20,110" active="1">
+      <interface name="SimTPDW" channel="winx1b"/>
+    </sensor>
+    <actuator name="a_htrr1_1" type="PowerHeater" pos="110,130" active="1" state="1">
+      <interface name="SimTPDW"/>
+      <electrical p="1.0" phase="x"/>
+    </actuator>
+    <actuator name="a_winx1a" type="Window" ref="winx1a" pos="110,110" active="1" state="0">
+      <interface name="SimTPDW"/>
+    </actuator>
+    <actuator name="a_winx1b" type="Window" ref="winx1b" pos="20,110" active="1" state="0">
+      <interface name="SimTPDW"/>
+    </actuator>
+  </room>
+  
+  <room name="room2" floor="0" ceiling="2.5"
+        polygon="4,11 9,11 9,6 4,6"
+        outerwallarea="8.85" innerwallarea="27.0" windowarea="1.14">
+    <window name="winx2" to="Outside" area="0.30" orientation="S"/>
+    <door name="doorx2" to="Main hall" area="1.6"/>
+    <sensor name="s_tempr2" type="Temp" pos="195,195" active="1">
+      <interface name="SimTPDW" channel="R2"/>
+    </sensor>
+    <sensor name="s_winx2" type="Window" ref="winx2" pos="200,110" active="1">
+      <interface name="SimTPDW" channel="winx2"/>
+    </sensor>
+    <sensor name="s_doorx2" type="Door" ref="doorx2" pos="40,105" active="1">
+      <interface name="SimTPDW" channel="doorx2"/>
+    </sensor>
+    <actuator name="a_htrr2_1" type="PowerHeater" pos="200,130" active="1" state="1">
+      <interface name="SimTPDW"/>
+      <electrical p="1.0" phase="x"/>
+    </actuator>
+    <actuator name="a_winx2" type="Window" ref="winx2" pos="200,110" active="1" state="0">
+      <interface name="SimTPDW"/>
+    </actuator>
+  </room>
+  
+  <room name="room3" floor="0" ceiling="2.5"
+        polygon="14,11 18,11 18,6 14,6"
+        outerwallarea="6.075" innerwallarea="24.225" windowarea="1.14">
+    <window name="winx3" to="Outside" area="0.30" orientation="S"/>
+    <door name="doorx3" to="Main hall" area="1.6"/>
+    <sensor name="s_tempr3" type="Temp" pos="425,225" active="1">
+      <interface name="SimTPDW" channel="R3"/>
+    </sensor>
+    <sensor name="s_winx3" type="Window" ref="winx3" pos="400,110" active="1">
+      <interface name="SimTPDW" channel="winx3"/>
+    </sensor>
+    <sensor name="s_doorx3" type="Door" ref="doorx3" pos="140,80" active="1">
+      <interface name="SimTPDW" channel="doorx3"/>
+    </sensor>
+    <actuator name="a_htrr3_1" type="PowerHeater" pos="400,130" active="1" state="1">
+      <interface name="SimTPDW"/>
+      <electrical p="1.0" phase="x"/>
+    </actuator>
+    <actuator name="a_winx3" type="Window" ref="winx3" pos="400,110" active="1" state="0">
+      <interface name="SimTPDW"/>
+    </actuator>
+  </room>
+  
+  <room name="room4" floor="0" ceiling="2.5"
+        polygon="18,11 22,11 22,6 18,6"
+        outerwallarea="15.325" innerwallarea="15.325" windowarea="1.14">
+    <window name="winx4" to="Outside" area="0.30" orientation="S"/>
+    <door name="doorx4" to="Main hall" area="1.6"/>
+    <sensor name="s_tempr4" type="Temp" pos="0,0" active="1">
+      <interface name="SimTPDW" channel="R4"/>
+    </sensor>
+    <sensor name="s_winx4" type="Window" ref="winx4" pos="485,110" active="1">
+      <interface name="SimTPDW" channel="winx4"/>
+    </sensor>
+    <sensor name="s_doorx4" type="Door" ref="doorx4" pos="180,80" active="1">
+      <interface name="SimTPDW" channel="doorx4"/>
+    </sensor>
+    <actuator name="a_htrr4_1" type="PowerHeater" pos="485,125" active="1" state="1">
+      <interface name="SimTPDW"/>
+      <electrical p="1.0" phase="x"/>
+    </actuator>
+    <actuator name="a_winx4" type="Window" ref="winx4" pos="485,110" active="1" state="0">
+      <interface name="SimTPDW"/>
+    </actuator>
+  </room>
+
+  <room name="room5" floor="0" ceiling="2.5"
+        polygon="0,5 4,5 4,0 0,0"
+        outerwallarea="16.45" innerwallarea="16.45" windowarea="2.39">
+    <window name="winx5" to="Outside" area="0.30" orientation="N"/>
+    <door name="doorx5" to="Main hall" area="1.6"/>
+    <sensor name="s_tempr5" type="Temp" pos="140,300" active="1">
+      <interface name="SimTPDW" channel="R5"/>
+    </sensor>
+    <sensor name="s_winx5" type="Window" ref="winx5" pos="70,270" active="1">
+      <interface name="SimTPDW" channel="winx5"/>
+    </sensor>
+    <sensor name="s_doorx5" type="Door" ref="doorx5" pos="20,40" active="1">
+      <interface name="SimTPDW" channel="doorx5"/>
+    </sensor>
+    <actuator name="a_htrr5_1" type="PowerHeater" pos="95,345" active="1" state="1">
+      <interface name="SimTPDW"/>
+      <electrical p="1.0" phase="x"/>
+    </actuator>
+    <actuator name="a_winx5" type="Window" ref="winx5" pos="70,270" active="1" state="0">
+      <interface name="SimTPDW"/>
+    </actuator>
+  </room>
+
+  <room name="room6" floor="0" ceiling="2.5"
+        polygon="4,3 9,3 9,0 4,0"
+        outerwallarea="8.825" innerwallarea="21.375" windowarea="2.44">
+    <window name="winx6" to="Outside" area="0.30" orientation="N"/>
+    <door name="doorx6" to="Main hall" area="1.6"/>
+    <sensor name="s_tempr6" type="Temp" pos="190,290" active="1">
+      <interface name="SimTPDW" channel="R6"/>
+    </sensor>
+    <sensor name="s_winx6" type="Window" ref="winx6" pos="200,360" active="1">
+      <interface name="SimTPDW" channel="winx6"/>
+    </sensor>
+    <sensor name="s_doorx6" type="Door" ref="doorx6" pos="80,40" active="1">
+      <interface name="SimTPDW" channel="doorx6"/>
+    </sensor>
+    <actuator name="a_htrr6_1" type="PowerHeater" pos="200,345" active="1" state="1">
+      <interface name="SimTPDW"/>
+      <electrical p="1.0" phase="x"/>
+    </actuator>
+    <actuator name="a_winx6" type="Window" ref="winx6" pos="200,360" active="1" state="0">
+      <interface name="SimTPDW"/>
+    </actuator>
+  </room>
+
+  <room name="room7" floor="0" ceiling="2.5"
+        polygon="14,4 22,4 22,0 14,0"
+        outerwallarea="21.75" innerwallarea="18.3" windowarea="2.28">
+    <window name="winx7a" to="Outside" area="0.30" orientation="N"/>
+    <window name="winx7b" to="Outside" area="0.30" orientation="N"/>
+    <door name="doorx7" to="Main hall" area="1.6"/>
+    <sensor name="s_tempr7" type="Temp" pos="455,290" active="1">
+      <interface name="SimTPDW" channel="R7"/>
+    </sensor>
+    <sensor name="s_winx7a" type="Window" ref="winx7a" pos="495,360" active="1">
+      <interface name="SimTPDW" channel="winx7a"/>
+    </sensor>
+    <sensor name="s_winx7b" type="Window" ref="winx7b" pos="405,360" active="1">
+      <interface name="SimTPDW" channel="winx7b"/>
+    </sensor>
+    <sensor name="s_doorx7" type="Door" ref="doorx7" pos="180,40" active="1">
+      <interface name="SimTPDW" channel="doorx7"/>
+    </sensor>
+    <actuator name="a_htrr7_1" type="PowerHeater" pos="405,345" active="1" state="1">
+      <interface name="SimTPDW"/>
+      <electrical p="1.0" phase="x"/>
+    </actuator>
+    <actuator name="a_htrr7_2" type="PowerHeater" pos="495,345" active="1" state="1">
+      <interface name="SimTPDW"/>
+      <electrical p="1.0" phase="x"/>
+    </actuator>
+    <actuator name="a_winx7a" type="Window" ref="winx7a" pos="495,360" active="1" state="0">
+      <interface name="SimTPDW"/>
+    </actuator>
+    <actuator name="a_winx7b" type="Window" ref="winx7b" pos="405,360" active="1" state="0">
+      <interface name="SimTPDW"/>
+    </actuator>
+  </room>
+
+  <!-- ENVIRONMENT -->
+  <environment name="Outside">
+    <sensor name="s_insolation" type="Insolation" pos="320,50" active="1">
+      <interface name="SimTPDW" channel="insol"/>
+    </sensor>
+    <sensor name="s_tempout" type="Temp" pos="322,52" active="1">
+      <interface name="SimTPDW" channel="temp"/>
+    </sensor>
+  </environment>
+  
+</building>
+
