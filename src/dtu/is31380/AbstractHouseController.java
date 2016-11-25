@@ -2,7 +2,7 @@ package dtu.is31380;
 
 public abstract class AbstractHouseController implements Runnable {
   
-  protected HouseControllerInterface house;
+  protected static HouseControllerInterface house;
   private Thread thr;
   private long timestep;
   private static final long TIMESTEP=1000;
@@ -26,7 +26,7 @@ public abstract class AbstractHouseController implements Runnable {
     thr.start();
   }
   
-  protected HouseControllerInterface getInterface() {
+  protected static HouseControllerInterface getInterface() {
     return house;
   }
   

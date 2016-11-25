@@ -29,7 +29,7 @@ public class Aggregator {
 	
 	private RpcServer grid_server = null;
 	public static final int AGG_GRID_PORT = 8080;
-	private static final String FUN_TIME_SYNC = Grid.FUN_TIME_SYNC; //keep it short
+	public static final String FUN_TIME_SYNC = Grid.FUN_TIME_SYNC; //keep it short
 	private static final String FUN_REQUEST =  Grid.FUN_REQUEST; //keep it short
 	private static final String FUN_ACTIVATION = Grid.FUN_ACTIVATION; //keep it short
 	
@@ -40,7 +40,8 @@ public class Aggregator {
     private PubSubServer pubSubServer;
     public static final int AGG_PORT_PUB = 9090;
 	public static final String TOPIC = "Flexibility";
-    public static final String FLEXIBILITY_ALL_AT_T0 = "FlexAll";
+    public static final String FLEXIBILITY_ALL_AT_T0 = "FlexT0";
+    public static final String ACTIVATE = "Activate";
 
 	private class Record {
     	public String homeName = null;
@@ -115,6 +116,11 @@ public class Aggregator {
   	        	if(args.length==1) {
   	        		initTime = Long.valueOf(args[0]);
   	        		System.out.println("initTime set to "+initTime);
+  	        		System.out.println("set initTime in house");
+		  	      	String[] reply = null;
+		  	  		// do synchronous call to agg TIME SYNCH
+		  	  		pubSubServer.send(TOPIC, new String[]{FUN_TIME_SYNC, String.valueOf(initTime)});
+		  	  		System.out.println("Success!");
   	        		return new String[]{
   	    		        	"ACC"
   			        };
@@ -131,7 +137,7 @@ public class Aggregator {
   	        			
 //  	        		Thinking if we can?
 //  	        		whole logic goes here
-  	        		pubSubServer.send(TOPIC, new String[]{FLEXIBILITY_ALL_AT_T0,args[0]});
+  	        		pubSubServer.send(TOPIC, new String[]{FLEXIBILITY_ALL_AT_T0,args[4],args[0],args[1]});
   	        		System.out.println("How u doinig?");
   	        		for(Record record:records.list) {
   	        			System.out.println(record.toString());

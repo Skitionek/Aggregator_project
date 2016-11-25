@@ -1,5 +1,7 @@
 package dtu.is31380.aggregator;
 
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,28 +15,29 @@ import commexercise.rpc.RpcClient;
 import commexercise.rpc.RpcClientImpl;
 import dtu.is31380.AbstractHouseController;
 import dtu.is31380.ActuatorConfig;
-import dtu.is31380.BuildingConfig;
 import dtu.is31380.HouseControllerInterface;
-import dtu.is31380.RoomConfig;
 import dtu.is31380.SensorConfig;
 
 public class HouseController extends AbstractHouseController {
 
+    private static long initTime = 0;
+    
 //	##################YOUR CODE GOES HERE##################################
 	private double T_set;
 	private double deviation;
 	private double T_bandmax;
 	private double T_bandmin;
-	private double Tminreg;
-	private double Tmaxreg;
-	private boolean regulating;
-    double average;
-  	private static final float flexibility = 1;
+	private static double Tminreg;
+	private static double Tmaxreg;
+	private static boolean regulating;
+    private static double average;
+  	private static double flexibility = 1;
 //  #######################################################################
-  	
+    
 	private static final int TIME_STEP = 5000;
 	  public HouseController() {
-	    super(TIME_STEP); //set timestep to 5000ms
+		    super(TIME_STEP); //set timestep to 5000ms
+  	
 	    T_set=21;
 	    deviation=0.25;
 	    T_bandmax=T_set+deviation;
@@ -44,14 +47,21 @@ public class HouseController extends AbstractHouseController {
 	    regulating=false;
 	  }
 	private static boolean dryRun = false;
-	  
+
 	//ACTIVATION SIGNALS (TURN ON, OFF OF NORMAL)
-	public enum RegulationType {
+	public enum State {
 	    MAX, 
 	    NORM,
 	    MIN 
 	  };
-	private RegulationType regulation=RegulationType.NORM;
+	private static State state=State.NORM;
+	
+	//ACTIVATION SIGNALS (TURN ON, OFF OF NORMAL)
+	public enum RegulationType {
+	    UP, 
+	    DOWN
+	  };
+	private RegulationType regulation=RegulationType.UP;
 	  
 	private static String NAME = null;	
 	private static final String TOPIC = FlexibilityService.TOPIC; 
@@ -60,8 +70,10 @@ public class HouseController extends AbstractHouseController {
 	private static final int AGG_PORT_PUB = Aggregator.AGG_PORT_PUB;
 	private static RpcClient client = null;
 	private static final float flexibility_time = 1;
-
+	
+	public static final String FUN_TIME_SYNC = Aggregator.FUN_TIME_SYNC;
     public static final String FLEXIBILITY_ALL_AT_T0 = Aggregator.FLEXIBILITY_ALL_AT_T0;
+    public static final String ACTIVATE = Aggregator.ACTIVATE;
 
     
     @Override
@@ -81,10 +93,10 @@ public class HouseController extends AbstractHouseController {
     	    System.out.println("Temp "+average);
     	    if (regulating && average>T_bandmin && average<T_bandmax){
     	        regulating=false;	
-    	        regulation=RegulationType.NORM;
+    	        state=State.NORM;
     	        }
     	    
-    	    if (regulation==RegulationType.NORM){
+    	    if (state==State.NORM){
     	    	
     	    
     	    	if (average<T_bandmin) {
@@ -99,7 +111,7 @@ public class HouseController extends AbstractHouseController {
     	    	}
     	    }
     	    
-    	    else if (regulation==RegulationType.MAX){
+    	    else if (state==State.MAX){
     	    	regulating=true;
     	    	for (String heat:heaters){
     	    	intf.setActuator(heat.toString(), 1.0);
@@ -108,11 +120,11 @@ public class HouseController extends AbstractHouseController {
     		    	if (average>T_bandmax) {
     		    		for (String heat:heaters){
     		    			intf.setActuator(heat.toString(), 0.0);
-    		    			regulation=RegulationType.NORM;//CHANGE TO NORM
+    		    			state=State.NORM;//CHANGE TO NORM
     		    		}
     		    	}
     		    }
-    	    else if (regulation==RegulationType.MIN){
+    	    else if (state==State.MIN){
     	    	regulating=true;
     	    	for (String heat:heaters){
     	    	intf.setActuator(heat.toString(), 0.0);
@@ -120,7 +132,7 @@ public class HouseController extends AbstractHouseController {
     		    	if (average<T_bandmin) {
     		    		for (String heat:heaters){
     		    			intf.setActuator(heat.toString(), 1.0);
-    		    			regulation=RegulationType.NORM;//CHANGE TO NORM
+    		    			state=State.NORM;//CHANGE TO NORM
     		    			
     		    		}
     		    	}
@@ -156,8 +168,13 @@ public class HouseController extends AbstractHouseController {
 		}
 		return sensors;
 	}
-
-	private double get_time(String req){
+	private static double flexibility_at_t0(RegulationType type,double t_start,double t_end) {
+		if(type==RegulationType.UP)
+			return get_time("up");
+		else 
+			return get_time("down");
+	}
+	private static double get_time(String req){
 		
 		double T_out;
 		double Cdown;
@@ -235,20 +252,67 @@ public class HouseController extends AbstractHouseController {
         PubSubCallbackListener flexibilityListener = new PubSubCallbackListener() {
             public void messageReceived(String[] msg) {
                 System.out.println("Received: " + msg[0]);
+            	String[] reply = null;
                 switch(msg[0]) {
+                case FUN_TIME_SYNC:
+      	        	if(msg.length==2) {
+      	        		initTime = Long.valueOf(msg[1]);
+      	        		System.out.println("initTime set to "+initTime);
+      	        		try {
+							reply = client.callSync(FUN_TIME_SYNC, new String[]{"ACC"});
+						} catch (Exception e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+      	        	} else {
+      	        		System.out.println("Wrong number of arguments!");
+      	        		try {
+							reply = client.callSync(FUN_TIME_SYNC, new String[]{"ACC"});
+						} catch (Exception e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+      	        	}
+                break;                
                 case FLEXIBILITY_ALL_AT_T0:
-                	double t0 = Double.valueOf(msg[1]);
-                	String[] reply = null;
+                	RegulationType type = msg[1]=="UP"?RegulationType.UP:RegulationType.DOWN;
+                	double t_start = Double.valueOf(msg[2]);
+                	double t_end = Double.valueOf(msg[3]);
             		// do synchronous call to agg
             		while(reply==null) {
             			try {
               	        	//homeName,flexibility_time
-            				reply = client.callSync(FLEXIBILITY_ALL_AT_T0, new String[]{NAME,String.valueOf(flexibility_time)});
+            				flexibility = flexibility_at_t0(type,t_start,t_end);
+            				System.out.println(flexibility);
+            				reply = client.callSync(FLEXIBILITY_ALL_AT_T0, new String[]{NAME,String.valueOf(flexibility)});
             			} catch (Exception e) {
-            				System.out.println("flexibility call exception! Possibly port is used!");
+            				System.out.println("Flexibility call exception! Possibly port is used!");
             				System.out.println("Retrying again in in random time (0-1s)...");
             				try {
-            					Thread.sleep((long) (Math.random()));
+            					Thread.sleep((long) (1000*Math.random()));
+            				} catch (InterruptedException e1) {
+            					// TODO Auto-generated catch block
+            					//e1.printStackTrace();
+            				}
+            				//e.printStackTrace();
+            			}
+            			System.out.println(Arrays.toString(reply));	
+            		}
+                	break;
+                case ACTIVATE:
+                	RegulationType act_type = msg[1]=="UP"?RegulationType.UP:RegulationType.DOWN;
+            		// do synchronous call to agg
+            		while(reply==null) {
+            			try {
+              	        	//homeName,flexibility_time
+            				if (act_type==RegulationType.UP) state=State.MAX;
+            				if (act_type==RegulationType.DOWN) state=State.MIN;
+            				reply = client.callSync(ACTIVATE, new String[]{"ACC"});
+            			} catch (Exception e) {
+            				System.out.println("Activation call exception! Possibly port is used!");
+            				System.out.println("Retrying again in in random time (0-1s)...");
+            				try {
+            					Thread.sleep((long) (1000*Math.random()));
             				} catch (InterruptedException e1) {
             					// TODO Auto-generated catch block
             					//e1.printStackTrace();

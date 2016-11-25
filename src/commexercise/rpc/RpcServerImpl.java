@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RpcServerImpl implements RpcServer {
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
+    //private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private WebServer webServer;
     private XmlRpcServer xmlRpcServer;
@@ -37,7 +37,7 @@ public class RpcServerImpl implements RpcServer {
 
     @Override
     public void setCallListener(CallListener listener) {
-        if (carrier.listener != null) log.debug("Remember only one call listener can be active at any time, the new listener will replace the old.");
+        //if (carrier.listener != null) log.debug("Remember only one call listener can be active at any time, the new listener will replace the old.");
         carrier.listener = listener;
     }
 

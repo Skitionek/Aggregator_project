@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.UUID;
 
 public class PubSubClientImpl implements PubSubClient {
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
+    //private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private XmlRpcClientConfigImpl config;
     private XmlRpcClient client;
@@ -57,7 +57,7 @@ public class PubSubClientImpl implements PubSubClient {
      */
     public void setID(String id) {
         if (clientActive) {
-            log.error("ID cannot be changed after the client has been subscribed!");
+            //log.error("ID cannot be changed after the client has been subscribed!");
             return;
         }
         this.uniqueId = id;
@@ -88,7 +88,7 @@ public class PubSubClientImpl implements PubSubClient {
         try {
             send("PubSubImplementation.unsubscribe", new Object[]{st.topic, uniqueId});
         } catch (XmlRpcException e) {
-            log.error("Unable to unsubscribe from server, unexpected behavior may follow...", e);
+            //log.error("Unable to unsubscribe from server, unexpected behavior may follow...");
         }
     }
 
@@ -102,7 +102,7 @@ public class PubSubClientImpl implements PubSubClient {
             try {
                 send("PubSubImplementation.unsubscribe", new Object[]{kv.subscriberThread.topic, uniqueId});
             } catch (XmlRpcException e) {
-                log.error("Unable to unsubscribe from server, unexpected behavior may follow...", e);
+                //log.error("Unable to unsubscribe from server, unexpected behavior may follow...");
             }
         }
         listeners.clear();
@@ -110,7 +110,7 @@ public class PubSubClientImpl implements PubSubClient {
 
 
     private class SubscriberThread implements Runnable {
-        private final Logger log = LoggerFactory.getLogger(this.getClass());
+        //private final Logger log = LoggerFactory.getLogger(this.getClass());
 
         public String topic;
         private String uniqueId;
@@ -140,7 +140,7 @@ public class PubSubClientImpl implements PubSubClient {
                 } catch (XmlRpcException e) {
                     if (!e.linkedException.getClass().equals(SocketTimeoutException.class)) {
                         if (!running) break;
-                        log.error("Error while waiting for response from pubsub server", e);
+                        //log.error("Error while waiting for response from pubsub server");
                     }
                 }
             }

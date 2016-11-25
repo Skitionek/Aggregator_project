@@ -16,7 +16,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class RpcClientImpl implements RpcClient {
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
+    //private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private XmlRpcClientConfigImpl config;
     private XmlRpcClient client;
@@ -69,7 +69,7 @@ public class RpcClientImpl implements RpcClient {
             }
             return strings;
         } catch (XmlRpcException e) {
-            log.error("Exception raised during synchronous call", e);
+            //log.error("Exception raised during synchronous call");
             throw new Exception(e.getMessage(), e);
         }
     }
@@ -112,7 +112,7 @@ public class RpcClientImpl implements RpcClient {
                 }
             });
         } catch (XmlRpcException e) {
-            log.error("Exception raised during asynchronous call", e);
+            //log.error("Exception raised during asynchronous call");
             throw new Exception(e.getMessage(), e);
         }
     }
