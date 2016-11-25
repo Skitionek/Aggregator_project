@@ -96,7 +96,6 @@ public class Aggregator {
             public void subscriberJoined(String topic, String id) {
               System.out.println("Subscriber '"+id+"' joined for topic '"+topic);
             }
-
             public void subscriberLeft(String topic, String id) {
               System.out.println("Subscriber '"+id+"' left for topic '"+topic);
             }
@@ -179,13 +178,13 @@ public class Aggregator {
         house_server.setCallListener(new CallListener() {
   	      @Override
   	      public String[] receivedSyncCall(String function, String[] args) throws Exception {
-  	        System.out.println("Received call for function '"+function+"' with arguments"+
+  	        System.out.println("Received call from house for function '"+function+"' with arguments"+
   	                            Arrays.toString(args)+". Replying now.");
   	        switch(function) {
   	        	case FUN_TIME_SYNC:
   	        	break;
   	        };
-  	        if (args.length==3) {
+  	        if (args.length==2) {
   	        	//homeName,flexibility_time
 	  	        System.out.println("Buuuu!");
 	        	Record current = new Record(args[0],Double.valueOf(args[1]));
