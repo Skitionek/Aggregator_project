@@ -36,10 +36,16 @@ public class HouseController extends AbstractHouseController {
 	private static final float flexibility_time = 1;
 
     public static final String FLEXIBILITY_ALL_AT_T0 = Aggregator.FLEXIBILITY_ALL_AT_T0;
+
+//	##################YOUR CODE GOES HERE##################################
+
+    
+//  #######################################################################
     
     @Override
     protected void execute() {
       if(!dryRun) {
+//        ##################YOUR CODE GOES HERE##################################
 	      HouseControllerInterface intf=getInterface();
 	      if (intf.getSimulationTime()>100) {
 	        if (intf.getActuatorSetpoint("a_htrr1_1")<0.5) {
@@ -47,16 +53,19 @@ public class HouseController extends AbstractHouseController {
 	        }
 	      }
 	      System.out.println("T_room1="+intf.getSensorValue("s_tempr1"));
+//        #######################################################################
       }
     }
     
     @Override
 	protected void init() {
         if(!dryRun) {
+//        	##################YOUR CODE GOES HERE##################################
         	BuildingConfig bc=getInterface().getBuildingConfig();
             ArrayList<RoomConfig> rooms=bc.getRooms();
             System.out.println("Rooms: "+rooms.toString());
             getInterface().setActuator("a_htrr1_1", 0.0);
+//          #######################################################################
         }
         
 		NAME="house"+Math.random();
