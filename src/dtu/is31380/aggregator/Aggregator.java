@@ -1,5 +1,6 @@
-package commexercise;
+package dtu.is31380.aggregator;
 
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -12,6 +13,8 @@ import commexercise.pubsub.PubSubServerImpl;
 import commexercise.pubsub.PubSubSubscriberListener;
 import commexercise.pubsub.demo.FlexibilityService;
 import commexercise.rpc.CallListener;
+import commexercise.rpc.RpcClient;
+import commexercise.rpc.RpcClientImpl;
 import commexercise.rpc.RpcServer;
 import commexercise.rpc.RpcServerImpl;
 
@@ -19,6 +22,11 @@ public class Aggregator {
 	
     private long initTime = 0;
 
+	private RpcClient grid_client = null;
+	private static final String GRID_ADDRESS = "localhost";
+	public static final int GRID_PORT = Grid.GRID_PORT;
+    public static final String FLEXIBILITY_ALL = "FlexAll";
+	
 	private RpcServer grid_server = null;
 	public static final int AGG_GRID_PORT = 8080;
 	private static final String FUN_TIME_SYNC = Grid.FUN_TIME_SYNC; //keep it short
@@ -36,12 +44,13 @@ public class Aggregator {
 
 	private class Record {
     	public String homeName = null;
-    	public double t0 = 0;
     	public double flexibility_time = 0;    
-    	Record(String homeName,double t0,double flexibility_time) {
+    	Record(String homeName,double flexibility_time) {
     		this.homeName = homeName;
-    		this.t0 = t0;
     		this.flexibility_time = flexibility_time;
+    	}
+    	public String toString() {
+    		return homeName+" "+flexibility_time;
     	}
 	}
     private class Records {
@@ -64,8 +73,14 @@ public class Aggregator {
 			house_server = new RpcServerImpl(AGG_HOUSE_PORT).start();
 		} catch (Exception e) {
 			System.out.println("Server start exception!");			
-			e.printStackTrace();
+			//e.printStackTrace();
 		} 
+		try {
+			grid_client = new RpcClientImpl("http://"+GRID_ADDRESS+":"+GRID_PORT);
+		} catch (MalformedURLException e) {
+			System.out.println("Connection refused!");
+			//e.printStackTrace();
+		}
 
         // create a pubsub server listening on port 
         log.info("Starting PubSub Server");
@@ -73,7 +88,7 @@ public class Aggregator {
 			pubSubServer = new PubSubServerImpl(AGG_PORT_PUB).start();
 		} catch (Exception e) {
 			System.out.println("Publisher start exception");
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 
         // add subscriber listener (gets called when a client subscribes or unsubscribes)
@@ -89,9 +104,9 @@ public class Aggregator {
 
         // start the demo service that publishes current time to subscribers
         //ClockService clock = new ClockService(pubSubServer).start();
-        new FlexibilityService(pubSubServer).start();
+        //new FlexibilityService(pubSubServer).start();
        
-	    // add a call listener that will get called when a girp does an RPC call to the agg
+	    // add a call listener that will get called when a gird does an RPC call to the agg
         grid_server.setCallListener(new CallListener() {
   	      @Override
   	      public String[] receivedSyncCall(String function, String[] args) throws Exception {
@@ -112,13 +127,23 @@ public class Aggregator {
   	        	}
   	        } else if (function.equals(FUN_REQUEST)) {
   	        	if(args.length==5) {
+                	String[] reply = null;
 //  		        	startTime,endTime,maxDelay,minDuration,regType
   	        			
 //  	        		Thinking if we can?
 //  	        		whole logic goes here
-  	        		pubSubServer.send(TOPIC, new String[]{FLEXIBILITY_ALL_AT_T0});
+  	        		pubSubServer.send(TOPIC, new String[]{FLEXIBILITY_ALL_AT_T0,args[0]});
+  	        		System.out.println("How u doinig?");
+  	        		for(Record record:records.list) {
+  	        			System.out.println(record.toString());
+  	        		}
+  	        		records.list.clear();
   	        		Thread.sleep(1000);
-  	        		
+  	        		System.out.println("How u doinig?");
+  	        		for(Record record:records.list) {
+  	        			System.out.println(record.toString());
+  	        		}
+  	        		reply = grid_client.callSync(FLEXIBILITY_ALL, new String[]{String.valueOf(409)});
   	        		//TODO !!!!!
   	        		
   	        		System.out.println("initTime set to "+initTime);
@@ -160,12 +185,19 @@ public class Aggregator {
   	        	case FUN_TIME_SYNC:
   	        	break;
   	        };
-  	        if (records.valid) {
-  	        	records.valid = false;
-  	        	//Record current = new Record(args[0],Double.valueOf(args[1]),args[2]);
-  	        	//records.list.add(current);
+  	        if (args.length==3) {
+  	        	//homeName,flexibility_time
+	  	        System.out.println("Buuuu!");
+	        	Record current = new Record(args[0],Double.valueOf(args[1]));
+	  	        System.out.println("Buuuu!");
+	        	System.out.println(current.toString());
+	  	        System.out.println("Buuuu!");
+	        	records.list.add(current);
+	  	        System.out.println("Buuuu!");
+	        		
+	  	        return new String[]{"ACC"};
   	        }
-  	        return new String[]{"ACC"};
+  	        return new String[]{"EXC"};
   	      }
   	      @Override
   	      public String[] receivedAsyncCall(String function, String[] args, long callID) throws Exception {

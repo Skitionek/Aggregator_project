@@ -1,10 +1,13 @@
-package commexercise;
+package dtu.is31380.aggregator;
 
 import java.net.MalformedURLException;
 import java.util.Arrays;
 
+import commexercise.rpc.CallListener;
 import commexercise.rpc.RpcClient;
 import commexercise.rpc.RpcClientImpl;
+import commexercise.rpc.RpcServer;
+import commexercise.rpc.RpcServerImpl;
 import dtu.is31380.aggregator.TSO;
 import dtu.is31380.aggregator.TSOListener;
 
@@ -17,6 +20,10 @@ public class Grid implements TSOListener {
 	public static final String FUN_REQUEST =  "Request"; //keep it short
 	public static final String FUN_ACTIVATION =  "Activation"; //keep it short
 	private RpcClient client = null;
+	
+	private RpcServer grid_server = null;
+	public static final int GRID_PORT = 8083;
+	
 	Grid() {
 	    initTime=System.currentTimeMillis();
 		
@@ -25,6 +32,13 @@ public class Grid implements TSOListener {
 		} catch (MalformedURLException e) {
 			System.out.println("Connection refused!");
 			//e.printStackTrace();
+		}
+
+		try {
+			grid_server = new RpcServerImpl(GRID_PORT).start();
+		} catch (Exception e2) {
+			// TODO Auto-generated catch block
+			//e2.printStackTrace();
 		}
 		
 		String[] reply = null;
@@ -39,12 +53,27 @@ public class Grid implements TSOListener {
 					Thread.sleep(1000);
 				} catch (InterruptedException e1) {
 					// TODO Auto-generated catch block
-					e1.printStackTrace();
+					//e1.printStackTrace();
 				}
 				//e.printStackTrace();
 			}
 			System.out.println(Arrays.toString(reply));	
 		}
+		
+		grid_server.setCallListener(new CallListener() {
+	  	      @Override
+	  	      public String[] receivedSyncCall(String function, String[] args) throws Exception {
+	  	        System.out.println("Received call for function '"+function+"' with arguments"+
+	  	                            Arrays.toString(args)+". Replying now.");
+	  	        
+	  	        return new String[]{"EXC"};
+	  	      }
+	  	      @Override
+	  	      public String[] receivedAsyncCall(String function, String[] args, long callID) throws Exception {
+	  	        return null; // not implemented for this test
+	  	      }
+	  	    });
+		
 		// if the time is set lets start our service
 		new TSO(this);
 	    while (true) {
@@ -95,8 +124,8 @@ public class Grid implements TSOListener {
 				//e.printStackTrace();
 			}
 			System.out.println(Arrays.toString(reply));
-	  }
-	
+	  };
+    
 	public static void main(String[] args) {
 		switch(args.length) {
 			case 2:
