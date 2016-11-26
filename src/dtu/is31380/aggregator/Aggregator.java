@@ -3,6 +3,7 @@ package dtu.is31380.aggregator;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -43,16 +44,21 @@ public class Aggregator {
     public static final String FLEXIBILITY_ALL_AT_T0 = "FlexT0";
     public static final String ACTIVATE = "Activate";
 
-	private class Record {
+	private class Record  implements Comparable<Record> {
     	public String homeName = null;
-    	public double flexibility_time = 0;    
-    	Record(String homeName,double flexibility_time) {
+    	public double flexibility_time = 0; 
+    	public double flexibility_power = 0;    
+    	Record(String homeName,double flexibility_time, Double flexibility_power) {
     		this.homeName = homeName;
     		this.flexibility_time = flexibility_time;
+    		this.flexibility_power = flexibility_power;
     	}
     	public String toString() {
-    		return homeName+" "+flexibility_time;
+    		return homeName+" "+flexibility_time+" "+flexibility_power;
     	}
+    	public int compareTo(Record anotherInstance) {
+            return (int) (this.flexibility_power - anotherInstance.flexibility_power);
+        }
 	}
     private class Records {
         public List<Record> list = null;
@@ -138,22 +144,31 @@ public class Aggregator {
 //  	        		Thinking if we can?
 //  	        		whole logic goes here
   	        		pubSubServer.send(TOPIC, new String[]{FLEXIBILITY_ALL_AT_T0,args[4],args[0],args[1]});
-  	        		System.out.println("How u doinig?");
-  	        		for(Record record:records.list) {
-  	        			System.out.println(record.toString());
-  	        		}
+  	        		
   	        		records.list.clear();
   	        		Thread.sleep(1000);
   	        		System.out.println("How u doinig?");
+  	        		double delta_power = 0;
+  	        		double bufor_t = 0;
+  	        		double bufor_p = 10000000;
+  	        		
+  	        		Collections.sort(records.list);
   	        		for(Record record:records.list) {
+  	        			if(record.flexibility_time>Double.valueOf(args[3])) delta_power+=record.flexibility_power;
+  	        			else {
+  	        				bufor_t+=record.flexibility_time;
+  	        				bufor_p=Math.min(bufor_p,record.flexibility_power);
+  	  	        			if(record.flexibility_time>Double.valueOf(args[3])) {
+  	  	        				delta_power+=bufor_p;
+  	  	        				bufor_t=0;
+  	  	        				bufor_p=100000000;
+  	  	        			}
+  	        			}
   	        			System.out.println(record.toString());
   	        		}
-  	        		reply = grid_client.callSync(FLEXIBILITY_ALL, new String[]{String.valueOf(409)});
-  	        		//TODO !!!!!
   	        		
-  	        		System.out.println("initTime set to "+initTime);
   	        		return new String[]{
-  	        				String.valueOf(args[4]=="UP"?-100:100)
+  	        				String.valueOf(delta_power)
   			        };
   	        	} else {
   	        		System.out.println("Wrong number of arguments!");
@@ -162,7 +177,8 @@ public class Aggregator {
   	        		};
   	        	}
   	        } else if (function.equals(FUN_ACTIVATION)) {
-  	        	
+	        	pubSubServer.send(TOPIC, new String[]{ACTIVATE,args[0]}); //to be change for sequenctional calls
+
   	        	
   	        	
   	        	
@@ -187,21 +203,19 @@ public class Aggregator {
   	        System.out.println("Received call from house for function '"+function+"' with arguments"+
   	                            Arrays.toString(args)+". Replying now.");
   	        switch(function) {
-  	        	case FUN_TIME_SYNC:
-  	        	break;
+	        	case FUN_TIME_SYNC:
+	      	        return new String[]{"ACC"};
+  	        	case FLEXIBILITY_ALL_AT_T0:
+  	    	        if (args.length==3) {
+  	    	        	//homeName,flexibility_time,flexibility_power
+  	  	        	Record current = new Record(args[0],Double.valueOf(args[1]),Double.valueOf(args[2]));
+  	  	        	records.list.add(current);
+  	  	        		
+  	  	  	        return new String[]{"ACC"};
+  	    	        }
+  	        	case ACTIVATE:
+  	    	        return new String[]{"ACC"};
   	        };
-  	        if (args.length==2) {
-  	        	//homeName,flexibility_time
-	  	        System.out.println("Buuuu!");
-	        	Record current = new Record(args[0],Double.valueOf(args[1]));
-	  	        System.out.println("Buuuu!");
-	        	System.out.println(current.toString());
-	  	        System.out.println("Buuuu!");
-	        	records.list.add(current);
-	  	        System.out.println("Buuuu!");
-	        		
-	  	        return new String[]{"ACC"};
-  	        }
   	        return new String[]{"EXC"};
   	      }
   	      @Override

@@ -1,7 +1,5 @@
 package dtu.is31380.aggregator;
 
-import java.io.OutputStream;
-import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -69,7 +67,8 @@ public class HouseController extends AbstractHouseController {
 	private static final int AGG_PORT = Aggregator.AGG_HOUSE_PORT;
 	private static final int AGG_PORT_PUB = Aggregator.AGG_PORT_PUB;
 	private static RpcClient client = null;
-	private static final float flexibility_time = 1;
+	private static double flexibility_time = 1;
+	private static final double flexibility_power = 1; //kW
 	
 	public static final String FUN_TIME_SYNC = Aggregator.FUN_TIME_SYNC;
     public static final String FLEXIBILITY_ALL_AT_T0 = Aggregator.FLEXIBILITY_ALL_AT_T0;
@@ -282,9 +281,18 @@ public class HouseController extends AbstractHouseController {
             		while(reply==null) {
             			try {
               	        	//homeName,flexibility_time
-            				flexibility = flexibility_at_t0(type,t_start,t_end);
-            				System.out.println(flexibility);
-            				reply = client.callSync(FLEXIBILITY_ALL_AT_T0, new String[]{NAME,String.valueOf(flexibility)});
+            				try {
+                				flexibility_time = flexibility_at_t0(type,t_start,t_end);
+            					if (flexibility_time>=0) System.out.println("House flexibility: "+flexibility_time);
+            				} catch (Exception e) {
+            					System.out.println("Flexibility equals null. Probably simulator is down.");
+            					flexibility_time = 0;
+            				}
+            				reply = client.callSync(FLEXIBILITY_ALL_AT_T0, new String[]{
+            						NAME,
+            						String.valueOf(flexibility_time),
+            						String.valueOf(flexibility_power)
+            				});
             			} catch (Exception e) {
             				System.out.println("Flexibility call exception! Possibly port is used!");
             				System.out.println("Retrying again in in random time (0-1s)...");
@@ -320,6 +328,7 @@ public class HouseController extends AbstractHouseController {
             				//e.printStackTrace();
             			}
             			System.out.println(Arrays.toString(reply));	
+            			System.out.println("Home state "+state);	
             		}
                 	break;
                 }             

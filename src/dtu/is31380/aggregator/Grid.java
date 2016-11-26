@@ -76,12 +76,12 @@ public class Grid implements TSOListener {
 		
 		// if the time is set lets start our service
 		new TSO(this);
-	    while (true) {
-	      try {
-	        Thread.currentThread().join();
-	      }
-	      catch (InterruptedException e) {}
-	    }
+//	    while (true) {
+//	      try {
+//	        Thread.currentThread().join();
+//	      }
+//	      catch (InterruptedException e) {}
+//	    }
 	}
 	  
 	  @Override

@@ -6,8 +6,8 @@ public class TSO implements Runnable {
   
   private static final double MAX_DELAY = 5; //[s]
   private static final double MIN_DURATION = 20; //[s]
-  public static final long CONTRACTING_TIME=2*60*1000; //after 2min
-  public static final long CONTRACT_INTERVAL=3*60*1000; //every 3min
+  public static final long CONTRACTING_TIME=60*1000; //after 1min
+  public static final long CONTRACT_INTERVAL=2*60*1000; //every 2min
   public static final long RESOLUTION=1000; //run everything on a 1s basis
   
   private TSOListener listener;
