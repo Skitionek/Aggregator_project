@@ -7,6 +7,7 @@ import java.util.HashMap;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+
 import dtu.is31380.SystemConstants.DeviceType;
 
 @SuppressWarnings("serial")
@@ -21,7 +22,7 @@ public abstract class AbstractIOConfig implements Serializable{
   protected static final String POSPAIR_REGEX = "-{0,1}[0-9]+\\.{0,1}[0-9]*,-{0,1}[0-9]+\\.{0,1}[0-9]*";
   private static final String INTERFACE_TAG = "interface";
   
-  protected String name;
+  public String name;
   protected Point2D.Double position;
   protected DeviceType type;
   protected boolean active;

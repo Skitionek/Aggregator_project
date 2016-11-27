@@ -1,9 +1,9 @@
-package commexercise.pubsub.demo;
-
-import commexercise.pubsub.PubSubServer;
+package dtu.is31380.Communication.commexercise.pubsub.demo;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import dtu.is31380.Communication.commexercise.pubsub.PubSubServer;
 
 public class FlexibilityService implements Runnable {
     private PubSubServer broker;

@@ -1,4 +1,4 @@
-package commexercise.pubsub;
+package dtu.is31380.Communication.commexercise.pubsub;
 
 public interface PubSubServer {
     PubSubServer start() throws Exception;

@@ -1,4 +1,4 @@
-package commexercise.rpc;
+package dtu.is31380.Communication.commexercise.rpc;
 
 public interface CallListener {
     String[] receivedSyncCall(String function, String[] args) throws Exception;

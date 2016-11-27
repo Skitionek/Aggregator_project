@@ -2,11 +2,12 @@ package dtu.is31380;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
-import java.util.regex.Matcher;
 
-import commexercise.rpc.CallListener;
-import commexercise.rpc.RpcServer;
-import commexercise.rpc.RpcServerImpl;
+import dtu.is31380.Communication.commexercise.rpc.CallListener;
+import dtu.is31380.Communication.commexercise.rpc.RpcServer;
+import dtu.is31380.Communication.commexercise.rpc.RpcServerImpl;
+
+import java.util.regex.Matcher;
 
 public class TemplateTermostat extends AbstractHouseController {
 

@@ -1,15 +1,15 @@
-package dtu.is31380.aggregator;
+package Aggregator;
 
 import java.net.MalformedURLException;
 import java.util.Arrays;
 
-import commexercise.rpc.CallListener;
-import commexercise.rpc.RpcClient;
-import commexercise.rpc.RpcClientImpl;
-import commexercise.rpc.RpcServer;
-import commexercise.rpc.RpcServerImpl;
-import dtu.is31380.aggregator.TSO;
-import dtu.is31380.aggregator.TSOListener;
+import dtu.is31380.Communication.commexercise.rpc.CallListener;
+import dtu.is31380.Communication.commexercise.rpc.RpcClient;
+import dtu.is31380.Communication.commexercise.rpc.RpcClientImpl;
+import dtu.is31380.Communication.commexercise.rpc.RpcServer;
+import dtu.is31380.Communication.commexercise.rpc.RpcServerImpl;
+import dtu.is31380.TSO.TSO;
+import dtu.is31380.TSO.TSOListener;
 
 public class Grid implements TSOListener {
 	

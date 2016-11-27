@@ -1,6 +1,6 @@
-package dtu.is31380.aggregator;
+package dtu.is31380.TSO;
 
-import dtu.is31380.aggregator.TSOListener.RegulationType;
+import dtu.is31380.TSO.TSOListener.RegulationType;
 
 public class TSO implements Runnable {
   

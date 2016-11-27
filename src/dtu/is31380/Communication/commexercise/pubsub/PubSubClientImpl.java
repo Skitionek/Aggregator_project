@@ -1,4 +1,4 @@
-package commexercise.pubsub;
+package dtu.is31380.Communication.commexercise.pubsub;
 
 import org.apache.xmlrpc.XmlRpcException;
 import org.apache.xmlrpc.client.XmlRpcClient;

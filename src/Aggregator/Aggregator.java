@@ -1,4 +1,4 @@
-package dtu.is31380.aggregator;
+package Aggregator;
 
 import java.net.MalformedURLException;
 import java.util.ArrayList;
@@ -9,15 +9,14 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import commexercise.pubsub.PubSubServer;
-import commexercise.pubsub.PubSubServerImpl;
-import commexercise.pubsub.PubSubSubscriberListener;
-import commexercise.pubsub.demo.FlexibilityService;
-import commexercise.rpc.CallListener;
-import commexercise.rpc.RpcClient;
-import commexercise.rpc.RpcClientImpl;
-import commexercise.rpc.RpcServer;
-import commexercise.rpc.RpcServerImpl;
+import dtu.is31380.Communication.commexercise.pubsub.PubSubServer;
+import dtu.is31380.Communication.commexercise.pubsub.PubSubServerImpl;
+import dtu.is31380.Communication.commexercise.pubsub.PubSubSubscriberListener;
+import dtu.is31380.Communication.commexercise.rpc.CallListener;
+import dtu.is31380.Communication.commexercise.rpc.RpcClient;
+import dtu.is31380.Communication.commexercise.rpc.RpcClientImpl;
+import dtu.is31380.Communication.commexercise.rpc.RpcServer;
+import dtu.is31380.Communication.commexercise.rpc.RpcServerImpl;
 
 public class Aggregator {
 	

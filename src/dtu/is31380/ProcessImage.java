@@ -7,6 +7,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
 import dtu.is31380.SystemConstants.DeviceType;
 
 public class ProcessImage implements HouseControllerInterface {

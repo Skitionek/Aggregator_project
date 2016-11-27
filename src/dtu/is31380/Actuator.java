@@ -1,6 +1,7 @@
 package dtu.is31380;
 
 import java.io.Serializable;
+
 import dtu.is31380.SystemConstants.DeviceType;
 
 @SuppressWarnings("serial")

@@ -1,4 +1,4 @@
-package dtu.is31380.aggregator;
+package dtu.is31380.TSO;
 
 public class TSOTest implements TSOListener {
 

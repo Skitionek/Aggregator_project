@@ -1,4 +1,4 @@
-package commexercise.rpc;
+package dtu.is31380.Communication.commexercise.rpc;
 
 import org.apache.xmlrpc.XmlRpcException;
 import org.apache.xmlrpc.XmlRpcRequest;

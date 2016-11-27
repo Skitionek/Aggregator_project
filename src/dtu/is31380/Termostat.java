@@ -4,9 +4,9 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import commexercise.rpc.CallListener;
-	import commexercise.rpc.RpcServer;
-	import commexercise.rpc.RpcServerImpl;
+import dtu.is31380.Communication.commexercise.rpc.CallListener;
+import dtu.is31380.Communication.commexercise.rpc.RpcServer;
+import dtu.is31380.Communication.commexercise.rpc.RpcServerImpl;
 
 public class Termostat extends AbstractHouseController {
 
