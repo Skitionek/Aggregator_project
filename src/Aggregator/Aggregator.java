@@ -53,7 +53,7 @@ public class Aggregator {
     		this.flexibility_power = flexibility_power;
     	}
     	public String toString() {
-    		return homeName+" "+flexibility_time+" "+flexibility_power;
+    		return homeName+" : "+flexibility_time+" : "+flexibility_power;
     	}
     	public int compareTo(Record anotherInstance) {
             return (int) (this.flexibility_power - anotherInstance.flexibility_power);
@@ -68,90 +68,103 @@ public class Aggregator {
     }
     private Records records = null;
     
+	private void wait_random(long ms) {
+		try {Thread.sleep((long) (ms+ms*Math.random()));} catch (InterruptedException e1) {};
+	}
+	private void exc(String s,long ms) {
+		System.out.println(s);
+		wait_random(ms);
+	}
+	private void exc(String s) {
+		exc(s+" Trying again in random time of 1-2s...",1000);
+	}
     
     private static final Logger log = LoggerFactory.getLogger(Aggregator.class);
 
   private Aggregator() {   
 	  	records = new Records();
 	    // create an rpc server listening on port
-	    try {
+	  	for(int i=1;i<=10;i++) try {
 			grid_server = new RpcServerImpl(AGG_GRID_PORT).start();
 			house_server = new RpcServerImpl(AGG_HOUSE_PORT).start();
+			i=10;
 		} catch (Exception e) {
-			System.out.println("Server start exception!");			
-			//e.printStackTrace();
+			exc(i+". Setting calls listenner for house or grid exception!");	
 		} 
-		try {
+	  	System.out.println("Calls listenners set");
+	  	
+	  	for(int i=1;i<=10;i++) try {
 			grid_client = new RpcClientImpl("http://"+GRID_ADDRESS+":"+GRID_PORT);
+			i=10;
 		} catch (MalformedURLException e) {
-			System.out.println("Connection refused!");
-			//e.printStackTrace();
+			exc(i+". Connection to grid refused! Check address and port.");
 		}
+	  	System.out.println("Connected to grid.");
 
-        // create a pubsub server listening on port 
-        log.info("Starting PubSub Server");
-        try {
+        // create a pubsub server
+        //log.info("Starting PubSub Server");
+        for(int i=1;i<=10;i++) try {
 			pubSubServer = new PubSubServerImpl(AGG_PORT_PUB).start();
+			i=10;
 		} catch (Exception e) {
-			System.out.println("Publisher start exception");
-			//e.printStackTrace();
+			exc(i+". Publisher start exception");
 		}
-
+        System.out.println("Publisher server started.");
+        
         // add subscriber listener (gets called when a client subscribes or unsubscribes)
         pubSubServer.addSubscriberListener(new PubSubSubscriberListener() {
             public void subscriberJoined(String topic, String id) {
               System.out.println("Subscriber '"+id+"' joined for topic '"+topic);
+              pubSubServer.send(TOPIC, new String[]{FUN_TIME_SYNC, String.valueOf(initTime)}); // sends time each time smb join
             }
             public void subscriberLeft(String topic, String id) {
               System.out.println("Subscriber '"+id+"' left for topic '"+topic);
             }
         });
-
-        // start the demo service that publishes current time to subscribers
-        //ClockService clock = new ClockService(pubSubServer).start();
-        //new FlexibilityService(pubSubServer).start();
        
-	    // add a call listener that will get called when a gird does an RPC call to the agg
+	    // add a call listener that will get called when a gird does an RPC call to the aggregator
         grid_server.setCallListener(new CallListener() {
   	      @Override
   	      public String[] receivedSyncCall(String function, String[] args) throws Exception {
-  	        System.out.println("Received call for function '"+function+"' with arguments"+
-  	                            Arrays.toString(args)+". Replying now.");
-  	        if (function.equals(FUN_TIME_SYNC)) {
+    	    System.out.println("grid>"+function+"("+Arrays.toString(args)+")");
+    	    
+  	        switch(function) {
+  	        case FUN_TIME_SYNC:
   	        	if(args.length==1) {
   	        		initTime = Long.valueOf(args[0]);
-  	        		System.out.println("initTime set to "+initTime);
-  	        		System.out.println("set initTime in house");
+  	        		System.out.println("InitTime set to "+initTime+".");
+  	        		System.out.println("Sending initTime to houses");
 		  	      	String[] reply = null;
 		  	  		// do synchronous call to agg TIME SYNCH
 		  	  		pubSubServer.send(TOPIC, new String[]{FUN_TIME_SYNC, String.valueOf(initTime)});
-		  	  		System.out.println("Success!");
+		  	  		System.out.println("Time published.");
   	        		return new String[]{
   	    		        	"ACC"
   			        };
   	        	} else {
-  	        		System.out.println("Wrong number of arguments!");
+  	        		System.out.println("Wrong number of arguments for function "+function+"!");
   	        		return new String[]{
   	        				"EXC"
   	        		};
   	        	}
-  	        } else if (function.equals(FUN_REQUEST)) {
+  	        case FUN_REQUEST:
   	        	if(args.length==5) {
                 	String[] reply = null;
 //  		        	startTime,endTime,maxDelay,minDuration,regType
-  	        			
-//  	        		Thinking if we can?
-//  	        		whole logic goes here
+                	
+                	System.out.println("Forwarding request to houses.");
   	        		pubSubServer.send(TOPIC, new String[]{FLEXIBILITY_ALL_AT_T0,args[4],args[0],args[1]});
   	        		
   	        		records.list.clear();
+  	        		System.out.println("Waiting one second for flexibility informations from houses.");
   	        		Thread.sleep(1000);
-  	        		System.out.println("How u doinig?");
+  	        		System.out.println(records.list.size()+" houses responded.");
   	        		double delta_power = 0;
   	        		double bufor_t = 0;
   	        		double bufor_p = 10000000;
   	        		
   	        		Collections.sort(records.list);
+  	        		System.out.println("Home name : flexibility time : flexibility power");
   	        		for(Record record:records.list) {
   	        			if(record.flexibility_time>Double.valueOf(args[3])) delta_power+=record.flexibility_power;
   	        			else {
@@ -175,16 +188,16 @@ public class Aggregator {
   	        				"EXC"
   	        		};
   	        	}
-  	        } else if (function.equals(FUN_ACTIVATION)) {
+  	        case FUN_ACTIVATION:
 	        	pubSubServer.send(TOPIC, new String[]{ACTIVATE,args[0]}); //to be change for sequenctional calls
 
   	        	
-  	        	
+  	        	//TODO
   	        	
   	        	return new String[]{
-  	        		"You called:",function," with arguments ",Arrays.toString(args)
+  	        		"ACC"
   	        	};
-  	        } else {
+  	        default:
   	        	return new String[]{
   	        		"Function '",function,"' does not exist."
   	        	};
@@ -199,23 +212,22 @@ public class Aggregator {
         house_server.setCallListener(new CallListener() {
   	      @Override
   	      public String[] receivedSyncCall(String function, String[] args) throws Exception {
-  	        System.out.println("Received call from house for function '"+function+"' with arguments"+
-  	                            Arrays.toString(args)+". Replying now.");
+  	        System.out.println("house>"+function+"("+Arrays.toString(args)+")");
   	        switch(function) {
 	        	case FUN_TIME_SYNC:
 	      	        return new String[]{"ACC"};
   	        	case FLEXIBILITY_ALL_AT_T0:
   	    	        if (args.length==3) {
   	    	        	//homeName,flexibility_time,flexibility_power
-  	  	        	Record current = new Record(args[0],Double.valueOf(args[1]),Double.valueOf(args[2]));
-  	  	        	records.list.add(current);
-  	  	        		
-  	  	  	        return new String[]{"ACC"};
+	  	  	        	Record current = new Record(args[0],Double.valueOf(args[1]),Double.valueOf(args[2]));
+	  	  	        	records.list.add(current);
+	  	  	        	return new String[]{"ACC"};
   	    	        }
   	        	case ACTIVATE:
   	    	        return new String[]{"ACC"};
-  	        };
-  	        return new String[]{"EXC"};
+  	    	    default:
+  	    	        return new String[]{"EXC"};
+  	        }
   	      }
   	      @Override
   	      public String[] receivedAsyncCall(String function, String[] args, long callID) throws Exception {
