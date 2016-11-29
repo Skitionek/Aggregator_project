@@ -23,8 +23,8 @@ public class TSO implements Runnable {
   public TSO(TSOListener listener) {
     this.listener=listener;
     clockZero=System.currentTimeMillis();
-    currentContract=clockZero;
-    nextContract=clockZero+CONTRACT_INTERVAL;
+    currentContract=clockZero+CONTRACT_INTERVAL;
+    nextContract=clockZero+CONTRACT_INTERVAL+CONTRACT_INTERVAL; 
     currentRegType=null;
     nextRegType=null;
     currentRegMagn=0;
