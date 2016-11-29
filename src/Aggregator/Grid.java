@@ -46,7 +46,7 @@ public class Grid implements TSOListener {
             client = new RpcClientImpl("http://" + AGG_ADDRESS + ":" + AGG_PORT);
             i = false;
         } catch (MalformedURLException e) {
-            exc(i + ". Connection to aggregator refused! Check address and port.");
+            exc("Connection to aggregator refused! Check address and port.");
         }
 
         // set aggregator calls listener
@@ -77,14 +77,14 @@ public class Grid implements TSOListener {
 
         // do synchronous call to aggregator TIME SYNCH
         String[] reply = null;
-        for (int i = 1; i <= 10; i++) try {
+        for (boolean i=true;i;) try {
             reply = client.callSync(FUN_TIME_SYNC, new String[] {
                 String.valueOf(initTime)
             });
             if (!reply[0].equals("ACC")) throw new EmptyStackException();
-            i = 10;
+            i = false;
         } catch (Exception e) {
-            exc(i + ". Time sync call exception! Possibly Aggregator is down or acknowlege message was dropped!");
+            exc("Time sync call exception! Possibly Aggregator is down or acknowlege message was dropped!");
         }
         System.out.println("InitTime sucessfully send to aggregator");
 

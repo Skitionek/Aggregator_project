@@ -37,7 +37,7 @@ public class HouseController extends AbstractHouseController {
     protected static final int TIME_STEP = 1000;
     public HouseController() {
         super(TIME_STEP); //set timestep to 5000ms
-        clockZero = System.currentTimeMillis() - initTime;
+        //clockZero=System.currentTimeMillis()-initTime;
         T_set = 21;
         deviation = 0.25;
         T_bandmax = T_set + deviation;
@@ -79,12 +79,15 @@ public class HouseController extends AbstractHouseController {
     @
     Override
     protected void execute() {
-        simulation = simulation + RESOLUTION;
-        if (simulation > tEnd_curr && tEnd_next != 0) { //find a better way to end control after contract period
+        simulation = (long) Math.ceil((System.currentTimeMillis() - initTime) / 1000);
+        //current request should b set to null after regulation ends
+        if (simulation > tEnd_curr - 5 && tEnd_next != 0) { //find a better way to end control after contract period
+            System.out.println("not good" + ", time_end" + tEnd_curr);
             current_req = next_req;
             state = state.NORM;
             going_back = true;
             tEnd_curr = tEnd_next;
+            System.out.println("not good" + ", time_end" + tEnd_curr);
         }
         HouseControllerInterface intf = getInterface();
         List < String > heaters = get_heaters();
@@ -100,10 +103,12 @@ public class HouseController extends AbstractHouseController {
         if (going_back && average > T_bandmin && average < T_bandmax) {
             regulating = false;
             going_back = false;
+
+            System.out.println("I'm back in normal operation!");
         }
 
         if (state == State.NORM) {
-            System.out.println("Time: " + simulation + "," + " House in NORM state" + " Resolution:" + RESOLUTION);
+            //System.out.println("Time: "+simulation+","+" House in NORM state");
             if (average < T_bandmin) {
 
                 for (String heat: heaters) {
@@ -116,8 +121,8 @@ public class HouseController extends AbstractHouseController {
             }
         } else if (state == State.MAX) {
             regulating = true;
-            t_act = simulation;
-            System.out.println("Time: " + simulation + "," + " House in MAX state");
+            //t_act=simulation;
+            //System.out.println("Time: "+simulation+","+" House in MAX state");
             for (String heat: heaters) {
                 intf.setActuator(heat.toString(), 1.0);
             }
@@ -130,9 +135,9 @@ public class HouseController extends AbstractHouseController {
                 }
             }
         } else if (state == State.MIN) {
-            t_act = simulation;
+            //t_act=simulation;
             regulating = true;
-            System.out.println("Time: " + simulation + "," + " House in MIN state");
+            //System.out.println("Time: "+simulation+","+" House in MIN state");
             for (String heat: heaters) {
                 intf.setActuator(heat.toString(), 0.0);
             }
@@ -176,14 +181,18 @@ public class HouseController extends AbstractHouseController {
     protected static double flexibility_at_t0(RegulationType type, double t_start, double t_end) {
         if (type == RegulationType.UP) {
             next_req = "up";
-            tStart_next = t_start;
-            tEnd_next = t_end;
+            tStart_next = t_start + 180;
+            tEnd_next = t_end + 180;
+            t_act = (long)(tStart_next + 1);
+            System.out.println("Time start: " + tStart_next + "," + " Time_end " + tEnd_next + ", reg_type=UP " + type);
             t_req = simulation;
             return get_time("up");
         } else {
             next_req = "down";
-            tStart_next = t_start;
-            tEnd_next = t_end;
+            tStart_next = t_start + 180;
+            tEnd_next = t_end + 180;
+            t_act = (long)(tStart_next + 1);
+            System.out.println("Time start: " + tStart_next + "," + " Time_end " + tEnd_next + ", reg_type=down " + type);
             t_req = simulation;
             return get_time("down");
         }
@@ -205,6 +214,7 @@ public class HouseController extends AbstractHouseController {
         if (!regulating && current_req == null) {
             System.out.println("within IF");
             if (req == "up") {
+                System.out.println("should be this");
                 return timeup;
             } else if (req == "down") {
                 return timedown;
@@ -214,20 +224,26 @@ public class HouseController extends AbstractHouseController {
         } else if (!regulating && current_req != null) {
             System.out.println("within IF not initial");
             double period = tStart_next - t_req;
+            System.out.println("interval=" + period);
             switch (current_req) {
                 case "up":
                     if (timeup > period) {
                         double T = (T_up - period * Cup);
+                        System.out.println("temp=" + T);
                         if (req == "up") {
+                            System.out.println("not regulating1 " + "interval=" + period + ", request=" + req + ", time=" + (T - Tminreg) / Cup);
                             return (T - Tminreg) / Cup;
                         } else if (req == "down") {
+                            System.out.println("not regulating1 " + ", interval=" + period + ", request=" + req + ", time=" + (Tmaxreg - T_down) / Cdown);
                             return (Tmaxreg - T_down) / Cdown;
                         } else {
                             return 0;
                         }
                     } else if (timeup < period) {
                         double t = t_req + timeup;
+                        System.out.println("t=" + t);
                         if (req == "up") {
+                            System.out.println("not regulating2 " + "interval=" + t + ", request=" + req + ", time=" + (tStart_next - t) * Cdown / Cup);
                             return (tStart_next - t) * Cdown / Cup;
                         } else if (req == "down") {
                             return timedown;
@@ -240,18 +256,22 @@ public class HouseController extends AbstractHouseController {
                 case "down":
                     if (timedown > period) {
                         double T = (T_down + period * Cdown);
+                        System.out.println("temp=" + T);
                         if (req == "up") {
                             return timeup;
                         } else if (req == "down") {
+                            System.out.println("not regulating2 " + "temp=" + T + ", request=" + req + ", time=" + (Tmaxreg - T) / Cdown);
                             return (Tmaxreg - T) / Cdown;
                         } else {
                             return 0;
                         }
                     } else if (timedown < period) {
                         double t = t_req + timedown;
+                        System.out.println("t=" + t);
                         if (req == "up") {
                             return timeup;
                         } else if (req == "down") {
+                            System.out.println("not regulating2 " + "tstart_next=" + tStart_next + "t=" + t + ", request=" + req + ", time=" + (tStart_next - t) * Cup / Cdown);
                             return (tStart_next - t) * Cup / Cdown;
                         } else {
                             return 0;
@@ -266,10 +286,12 @@ public class HouseController extends AbstractHouseController {
             System.out.println("within IF regulating");
             double period = tStart_next - t_act;
             switch (current_req) {
-                case "UP":
+                case "up":
                     if (timeup > period) {
                         double T = (T_up - period * Cup);
+                        System.out.println("type up");
                         if (req == "up") {
+                            System.out.println("regulating1 " + "tstart_next=" + tStart_next + "temp=" + T + ", request=" + req + ", time=" + (T - Tminreg) / Cup);
                             return (T - Tminreg) / Cup;
                         } else if (req == "down") {
                             return timedown;
@@ -279,6 +301,7 @@ public class HouseController extends AbstractHouseController {
                     } else if (timeup < period) {
                         double t = t_act + timeup;
                         if (req == "up") {
+                            System.out.println("regulating1 " + "tstart_next=" + tStart_next + "t=" + t + ", request=" + req + ", time=" + (tStart_next - t) * Cdown / Cup);
                             return (tStart_next - t) * Cdown / Cup;
                         } else if (req == "down") {
                             return timedown;
@@ -294,6 +317,7 @@ public class HouseController extends AbstractHouseController {
                         if (req == "up") {
                             return timeup;
                         } else if (req == "down") {
+                            System.out.println("regulating2 " + "tstart_next=" + tStart_next + "temp=" + T + ", request=" + req + ", time=" + (Tmaxreg - T) / Cdown);
                             return (Tmaxreg - T) / Cdown;
                         } else {
                             return 0;
@@ -303,6 +327,7 @@ public class HouseController extends AbstractHouseController {
                         if (req == "up") {
                             return timeup;
                         } else if (req == "down") {
+                            System.out.println("regulating2" + "tstart_next=" + tStart_next + "t=" + t + ", request=" + req + ", time=" + (tStart_next - t) * Cdown / Cup);
                             return (tStart_next - t) * Cup / Cdown;
                         } else {
                             return 0;
@@ -329,6 +354,7 @@ public class HouseController extends AbstractHouseController {
         for (String heat: heaters) {
             intf.setActuator(heat.toString(), 0.0);
         }
+
     };
 
 

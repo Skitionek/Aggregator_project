@@ -92,7 +92,7 @@ public class Aggregator {
             house_server = new RpcServerImpl(AGG_HOUSE_PORT).start();
             i = false;
         } catch (Exception e) {
-            exc(i + ". Setting calls listenner for house or grid exception!");
+            exc("Setting calls listenner for house or grid exception!");
         }
         System.out.println("Calls listenners set");
 
@@ -100,7 +100,7 @@ public class Aggregator {
             grid_client = new RpcClientImpl("http://" + GRID_ADDRESS + ":" + GRID_PORT);
             i = false;
         } catch (MalformedURLException e) {
-            exc(i + ". Connection to grid refused! Check address and port.");
+            exc("Connection to grid refused! Check address and port.");
         }
         System.out.println("Connected to grid.");
 
