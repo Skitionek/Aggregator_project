@@ -104,6 +104,7 @@ public class Aggregator {
         }
         System.out.println("Connected to grid.");
 
+        
         // create a pubsub server
         //log.info("Starting PubSub Server");
         for (int i = 1; i <= 10; i++) try {
@@ -113,6 +114,26 @@ public class Aggregator {
             exc(i + ". Publisher start exception");
         }
         System.out.println("Publisher server started.");
+        
+        System.out.println("Asking grid for InitTime.");
+        String[] reply = null;
+        for (boolean i=true;i;) try {
+            reply = grid_client.callSync(FUN_TIME_SYNC, new String[] {});
+            if (reply.length == 1) {
+                initTime = Long.valueOf(reply[0]);
+                System.out.println("InitTime set to " + initTime + ".");
+                System.out.println("Sending initTime to houses");
+                pubSubServer.send(TOPIC, new String[] {
+                    FUN_TIME_SYNC, String.valueOf(initTime)
+                });
+                System.out.println("Time published.");
+            } else {
+                System.out.println("Wrong number of arguments for function " + FUN_TIME_SYNC +"!");
+            }
+            i = false;
+        } catch (Exception e) {
+            exc("Time sync call exception! Possibly Grid is down or acknowlege message was dropped!");
+        }
 
         // add subscriber listener (gets called when a client subscribes or unsubscribes)
         pubSubServer.addSubscriberListener(new PubSubSubscriberListener() {

@@ -60,9 +60,15 @@ public class Grid implements TSOListener {
             Override
             public String[] receivedSyncCall(String
                 function, String[] args) throws Exception {
-                System.out.println("Received call for function '" + function +"' with arguments" +
-                    Arrays.toString(args) + ". Replying now.");
-                //Not currently implement
+                System.out.println("aggregator>" + function +"(" +
+                    Arrays.toString(args) + ")");
+                if (function.equals(FUN_TIME_SYNC)) {
+	                System.out.println("Aggregator request for InitTime.");
+	                System.out.println("InitTime sucessfully send to aggregator");
+	                return new String[] {
+	                        String.valueOf(initTime)
+	                }; 
+                };                
                 return new String[] {
                     "EXC"
                 };
@@ -75,18 +81,18 @@ public class Grid implements TSOListener {
         });
 
 
-        // do synchronous call to aggregator TIME SYNCH
-        String[] reply = null;
-        for (boolean i=true;i;) try {
-            reply = client.callSync(FUN_TIME_SYNC, new String[] {
-                String.valueOf(initTime)
-            });
-            if (!reply[0].equals("ACC")) throw new EmptyStackException();
-            i = false;
-        } catch (Exception e) {
-            exc("Time sync call exception! Possibly Aggregator is down or acknowlege message was dropped!");
-        }
-        System.out.println("InitTime sucessfully send to aggregator");
+//        // do synchronous call to aggregator TIME SYNCH
+//        String[] reply = null;
+//        for (boolean i=true;i;) try {
+//            reply = client.callSync(FUN_TIME_SYNC, new String[] {
+//                String.valueOf(initTime)
+//            });
+//            if (!reply[0].equals("ACC")) throw new EmptyStackException();
+//            i = false;
+//        } catch (Exception e) {
+//            exc("Time sync call exception! Possibly Aggregator is down or acknowlege message was dropped!");
+//        }
+//        System.out.println("InitTime sucessfully send to aggregator");
 
         // if the time is set lets start our service
         new TSO(this);
