@@ -37,6 +37,7 @@ public class AggregatorController extends HouseController {
     }
 
     public AggregatorController() {
+    	System.out.println(NAME.toUpperCase());
         for (int i = 1; i <= 10; i++) try {
             client = new RpcClientImpl("http://" + AGG_ADDRESS + ":" + AGG_PORT);
             i = 10;
@@ -58,7 +59,7 @@ public class AggregatorController extends HouseController {
         // add message listeners 
         PubSubCallbackListener flexibilityListener = new PubSubCallbackListener() {
             public void messageReceived(String[] msg) {
-                System.out.println("aggregator>>" + Arrays.toString(msg));
+                System.out.println("aggregator>" + Arrays.toString(msg));
                 String[] reply = null;
                 switch (msg[0]) {
                     case FUN_TIME_SYNC:
@@ -80,7 +81,7 @@ public class AggregatorController extends HouseController {
                         }
                         break;
                     case FLEXIBILITY_ALL_AT_T0:
-                        RegulationType type = msg[1] == "UP" ? RegulationType.UP : RegulationType.DOWN;
+                        RegulationType type = msg[1].equals("UP") ? RegulationType.UP : RegulationType.DOWN;
                         double t_start = Double.valueOf(msg[2]);
                         double t_end = Double.valueOf(msg[3]);
                         // do synchronous call to agg

@@ -64,7 +64,7 @@ public class Grid implements TSOListener {
                     Arrays.toString(args) + ")");
                 if (function.equals(FUN_TIME_SYNC)) {
 	                System.out.println("Aggregator request for InitTime.");
-	                System.out.println("InitTime sucessfully send to aggregator");
+	                System.out.println("InitTime sucessfully sent to aggregator.");
 	                return new String[] {
 	                        String.valueOf(initTime)
 	                }; 
@@ -157,7 +157,7 @@ public class Grid implements TSOListener {
                 System.out.println("Assigned aggregator port: " + AGG_PORT);
                 break;
             default:
-                System.out.println("Used default aggregator address:port");
+                System.out.println("Used default initial values.");
         }
         new Grid();
     }

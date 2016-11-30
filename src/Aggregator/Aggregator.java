@@ -82,7 +82,7 @@ public class Aggregator {
         exc(s + " Trying again in random time of 1-2s...", 1000);
     }
 
-    private static final Logger log = LoggerFactory.getLogger(Aggregator.class);
+    	private static final Logger log = LoggerFactory.getLogger(Aggregator.class);
 
     private Aggregator() {
         records = new Records();

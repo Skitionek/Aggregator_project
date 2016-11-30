@@ -37,6 +37,7 @@ public class HouseController extends AbstractHouseController {
     protected static final int TIME_STEP = 1000;
     public HouseController() {
         super(TIME_STEP); //set timestep to 5000ms
+        NAME = "house" + Math.random();
         //clockZero=System.currentTimeMillis()-initTime;
         T_set = 21;
         deviation = 0.25;
@@ -346,9 +347,6 @@ public class HouseController extends AbstractHouseController {
     @
     Override
     protected void init() {
-        NAME = "house" + Math.random();
-        System.out.println(NAME);
-
         HouseControllerInterface intf = getInterface();
         List < String > heaters = get_heaters();
         for (String heat: heaters) {
