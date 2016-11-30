@@ -138,13 +138,13 @@ public class Aggregator {
         // add subscriber listener (gets called when a client subscribes or unsubscribes)
         pubSubServer.addSubscriberListener(new PubSubSubscriberListener() {
             public void subscriberJoined(String topic, String id) {
-                System.out.println("Subscriber '" + id + "' joined for topic '" + topic);
+                System.out.println("Subscriber '" + id + "' joined for topic '" + topic + ". Sending the InitTime.");
                 pubSubServer.send(TOPIC, new String[] {
                     FUN_TIME_SYNC, String.valueOf(initTime)
                 }); // sends time each time smb join
             }
             public void subscriberLeft(String topic, String id) {
-                System.out.println("Subscriber '" + id + "' left for topic '" + topic);
+                System.out.println("Subscriber '" + id + "' left for topic '" + topic + ".");
             }
         });
 
